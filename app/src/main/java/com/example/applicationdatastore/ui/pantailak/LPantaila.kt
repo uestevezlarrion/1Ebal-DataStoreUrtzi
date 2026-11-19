@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 private val Context.dataStore by preferencesDataStore(name = "saioaren_datuak")
 
 private val EMAIL_GAKOA = stringPreferencesKey("erabiltzaile_emaila")
+private val PASAHITZA_GAKOA = stringPreferencesKey("erabiltzaile_pasahitza")
 private val GOGORATU_GAKOA = booleanPreferencesKey("erabiltzailea_gogoratu")
 
 @Composable
@@ -51,7 +52,7 @@ fun LPantaila(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     val auth = FirebaseAuth.getInstance()
 
-    val gordetakoEmaila by context.dataStore.data.collectAsState(
+    val gordetakoDatuak by context.dataStore.data.collectAsState(
         initial = emptyPreferences()
     )
 
@@ -60,11 +61,14 @@ fun LPantaila(navController: NavHostController) {
     var gogoratu by remember { mutableStateOf(false) }
     var mezua by remember { mutableStateOf("") }
 
-    // DataStore-tik berreskuratutako erabiltzailea pantailan kargatu.
-    LaunchedEffect(gordetakoEmaila) {
-        val emailGordea = gordetakoEmaila[EMAIL_GAKOA] ?: ""
-        emaila = emailGordea
-        gogoratu = gordetakoEmaila[GOGORATU_GAKOA] ?: false
+    // DataStore-tik berreskuratutako datuak pantailan kargatu.
+    LaunchedEffect(gordetakoDatuak) {
+        val gogoratuGordea = gordetakoDatuak[GOGORATU_GAKOA] ?: false
+        gogoratu = gogoratuGordea
+        if (gogoratuGordea) {
+            emaila = gordetakoDatuak[EMAIL_GAKOA] ?: ""
+            pasahitza = gordetakoDatuak[PASAHITZA_GAKOA] ?: ""
+        }
     }
 
     Column(
@@ -129,9 +133,11 @@ fun LPantaila(navController: NavHostController) {
                                         context.dataStore.edit { datuak ->
                                             if (gogoratu) {
                                                 datuak[EMAIL_GAKOA] = emaila
+                                                datuak[PASAHITZA_GAKOA] = pasahitza
                                                 datuak[GOGORATU_GAKOA] = true
                                             } else {
                                                 datuak.remove(EMAIL_GAKOA)
+                                                datuak.remove(PASAHITZA_GAKOA)
                                                 datuak[GOGORATU_GAKOA] = false
                                             }
                                         }
@@ -163,9 +169,11 @@ fun LPantaila(navController: NavHostController) {
                                         context.dataStore.edit { datuak ->
                                             if (gogoratu) {
                                                 datuak[EMAIL_GAKOA] = emaila
+                                                datuak[PASAHITZA_GAKOA] = pasahitza
                                                 datuak[GOGORATU_GAKOA] = true
                                             } else {
                                                 datuak.remove(EMAIL_GAKOA)
+                                                datuak.remove(PASAHITZA_GAKOA)
                                                 datuak[GOGORATU_GAKOA] = false
                                             }
                                         }
@@ -193,7 +201,7 @@ fun LPantaila(navController: NavHostController) {
                 checked = gogoratu,
                 onCheckedChange = { gogoratu = it }
             )
-            Text("Gogoratu Erabiltzailea")
+            Text("Gogoratu kontua")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
